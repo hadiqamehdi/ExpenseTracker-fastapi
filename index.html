@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expense Tracker</title>
+    <!-- Add jQuery library -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 30px auto;
+            padding: 0 20px;
+            background: #f4f4f9;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        input, select, button {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input, select {
+            flex: 1 1 150px;
+        }
+
+        button {
+            flex: 1 1 100%;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        h3 {
+            text-align: right;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Expense Tracker</h2>
+
+<form id="expenseForm">  <!-- Fixed ID -->
+    <input id="title" type="text" placeholder="Expense Title" required>
+    <input id="amount" type="number" placeholder="Amount" required>
+    
+    <select id="category" required>
+        <option value="">Select Category</option>
+        <option>Food</option>
+        <option>Travel</option>
+        <option>Bills</option>
+        <option>Shopping</option>
+    </select>
+
+    <input type="date" id="date" required>  <!-- Fixed ID from "data" to "date" -->
+    <button type="submit">Add Expense</button>
+</form>
+
+<h3>Total Expense: <span id="total">0</span></h3>  <!-- Added id="total" -->
+
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Amount</th>
+            <th>Category</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody id="expenseList">  <!-- Added id for dynamic content -->
+        <!-- Expenses will go here -->
+    </tbody>
+</table>
+
+<script>$(document).ready(function(){
+    function loadExpenses() {
+        $.get("http://127.0.0.1:8000/expenses", function(data) {
+            $("#expenseList").html("");  // Clear existing rows
+            let total = 0;
+
+            data.forEach(exp => {
+                total += exp.amount;
+                $("#expenseList").append(`
+                    <tr>
+                        <td>${exp.title}</td>
+                        <td>${exp.amount}</td>
+                        <td>${exp.category}</td>
+                        <td>${exp.date}</td>
+                    </tr>
+                `);
+            });
+
+            $("#total").text(total);  // Update total
+        });
+    }
+
+    // Fixed form selector (was missing #)
+    $("#expenseForm").submit(function(e){
+        e.preventDefault();
+        const data = {
+            title: $('#title').val(),
+            amount: parseFloat($('#amount').val()),
+            category: $('#category').val(),
+            date: $('#date').val()  // Fixed selector
+        };
+
+        $.ajax({
+            url: "http://127.0.0.1:8000/add-expense",  // FIXED: Removed extra comma
+            type: "POST",
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                console.log(response.message);
+                loadExpenses();
+                $("#expenseForm")[0].reset();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+            }
+        });
+    });
+
+    loadExpenses();
+});
+</script>
+
+</body>
+</html>
